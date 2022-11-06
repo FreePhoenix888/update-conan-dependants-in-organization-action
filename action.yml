@@ -1,8 +1,9 @@
 name: 'Update conan dependants in organization'
 description: 'Update conan dependants in organization repositories'
 author: 'FreePhoenix888'
-icon: 'arrow-up-circle'
-color: 'blue'
+branding:
+  icon: 'arrow-up-circle'
+  color: 'blue'
 inputs:
   organization:
     required: true
