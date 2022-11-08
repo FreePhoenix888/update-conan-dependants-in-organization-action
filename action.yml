@@ -5,15 +5,15 @@ branding:
   icon: 'arrow-up-circle'
   color: 'blue'
 inputs:
-  organization:
+  organizationName:
     required: true
     description: 'The name of the organization whose repositories must be updated to change the conan dependency version.'
   token:
     required: true
-    description: 'Token'
+    description: 'The github access token'
   conanFilePath:
       required: true
-      description: 'Path of the conanfile.txt in organization repositories.'
+      description: 'The path of the conanfile.txt in organization repositories.'
   commitMessage:
       required: true
       description: 'The commit message that will be used to update conanfile.txt.'
@@ -30,10 +30,11 @@ inputs:
       required: true
       description: 'The text that will be inserted instead of the replaceable regex.'
   shouldOpenPullRequest:
-      required: true
+      required: false
+      default: "true"
       description: 'true or false value that determines whether the pull request should be opened. Redundant if the destination branch name is the same as the source branch name.'
   pullRequestTitle:
-      required: true
+      required: false
       description: 'The title of the pull request that will be opened.'
   pullRequestBody:
     required: true
