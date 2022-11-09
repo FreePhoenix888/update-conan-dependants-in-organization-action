@@ -9,29 +9,29 @@ inputs:
     required: true
     description: 'Token'
   conanFilePath:
-      required: true
-      description: 'Path of the conanfile.txt in organization repositories.'
+    required: true
+    description: 'Path of the conanfile.txt in organization repositories.'
   commitMessage:
-      required: true
-      description: 'The commit message that will be used to update conanfile.txt.'
+    required: true
+    description: 'The commit message that will be used to update conanfile.txt.'
   sourceBranchName:
-      required: true
-      description: 'The name of the branch that will be taken as the basis.'
+    required: true
+    description: 'The name of the branch that will be taken as the basis.'
   destinationBranchName:
-      required: true
-      description: 'The name of the branch that will be used to publish the new commit.'
+    required: true
+    description: 'The name of the branch that will be used to publish the new commit.'
   conanFileReplaceableRegex:
-      required: true
-      description: 'The regex that will be replaced in the conanfile.txt.'
+    required: true
+    description: 'The regex that will be replaced in the conanfile.txt.'
   conanFileReplacement:
-      required: true
-      description: 'The text that will be inserted instead of the replaceable regex.'
+    required: true
+    description: 'The text that will be inserted instead of the replaceable regex.'
   shouldOpenPullRequest:
-      required: true
-      description: 'true or false value that determines whether the pull request should be opened. Redundant if the destination branch name is the same as the source branch name.'
+    required: true
+    description: 'true or false value that determines whether the pull request should be opened. Redundant if the destination branch name is the same as the source branch name.'
   pullRequestTitle:
-      required: true
-      description: 'The title of the pull request that will be opened.'
+    required: true
+    description: 'The title of the pull request that will be opened.'
   pullRequestBody:
     required: true
     description: 'The body of the pull request that will be opened.'
