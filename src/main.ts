@@ -19,7 +19,7 @@ const run = async () => {
     const inputs = {
         token: core.getInput("token"),
         conanFilePath: core.getInput("conanFilePath"),
-        commitMessage: core.getInput("commitMessage"),
+        commitMessageTemplate: core.getInput("commitMessageTemplate"),
         sourceBranchName: core.getInput("sourceBranchName"),
         destinationBranchName: core.getInput("destinationBranchName"),
         conanFileReplaceableRegex: core.getInput("conanFileReplaceableRegex"),
@@ -40,24 +40,35 @@ const run = async () => {
 
     const {data: repositories} = await octokit.rest.repos.listForOrg({org: context.repo.owner});
     for (const repository of repositories) {
-        const getContentResponse = await octokit.rest.repos.getContent({
-            owner: context.repo.owner,
-            repo: repository.name,
-            path: inputs.commitMessage,
-            ref: inputs.sourceBranchName
-        });
-
-        if (Array.isArray(getContentResponse.data)) {
-            throw new Error("conanFilePath must lead to the conanfile.txt that contains conan dependencies.");
+        let content;
+        try {
+            const getContentResponse = await octokit.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: repository.name,
+                path: inputs.conanFilePath,
+                ref: inputs.sourceBranchName
+            });
+            if (Array.isArray(getContentResponse.data)) {
+                throw new Error("conanFilePath must lead to the conanfile.txt that contains conan dependencies.");
+            }
+            if (!("content" in getContentResponse.data)) {
+                throw new Error(`Unable to get content of ${inputs.conanFilePath}.`);
+            }
+            content = getContentResponse.data.content
+        } catch (error) {
+            continue
         }
-        if (!("content" in getContentResponse.data)) {
-            throw new Error(`Unable to get content of ${inputs.conanFilePath}.`);
-        }
 
+
+        const regex = new RegExp(inputs.conanFileReplaceableRegex);
+        const match = regex.exec(content);
+        if(!match) {
+            continue;
+        }
         const newContent = Base64.decode(
-            getContentResponse.data.content
-        ).replace(
-            new RegExp(inputs.conanFileReplaceableRegex), inputs.conanFileReplacement
+            content
+        ).replace(content
+            , inputs.conanFileReplacement
         );
 
         if(inputs.sourceBranchName != inputs.destinationBranchName) {
@@ -75,11 +86,16 @@ const run = async () => {
             })
         }
 
+        let commitMessage = inputs.commitMessageTemplate;
+        if(match?.groups?.PREVIOUS_VERSION) {
+            commitMessage = inputs.commitMessageTemplate.replace("{PREVIOUS_VERSION}", match.groups.PREVIOUS_VERSION)
+        }
+
          await octokit.rest.repos.createOrUpdateFileContents({
             owner: context.repo.owner,
             repo: repository.name,
             path: inputs.conanFilePath,
-            message: inputs.commitMessage,
+            message: commitMessage,
             content: Base64.encode(newContent),
             branch: inputs.destinationBranchName
         })
