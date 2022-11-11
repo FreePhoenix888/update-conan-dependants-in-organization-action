@@ -14,9 +14,9 @@ inputs:
   conanFilePath:
       required: true
       description: 'The path of the conanfile.txt in organization repositories.'
-  commitMessage:
+  commitMessageTemplate:
       required: true
-      description: 'The commit message that will be used to update conanfile.txt.'
+      description: 'The commit message that will be used to update conanfile.txt. Template variables can be used with the folowwing syntax: {TEMPLATE_VARIABLE} and will be replaced with the corresponding value. Template variables: PREVIOUS_VERSION - the previous version of the package in the  conanfile.txt of the dependant package; the conanFileReplaceableRegex must contain named capture group with the name PREVIOUS_VERSION to use this template variable.'
   sourceBranchName:
       required: true
       description: 'The name of the branch that will be taken as the basis.'
@@ -25,7 +25,7 @@ inputs:
       description: 'The name of the branch that will be used to publish the new commit.'
   conanFileReplaceableRegex:
       required: true
-      description: 'The regex that will be replaced in the conanfile.txt.'
+      description: 'The regex that will be replaced in the conanfile.txt. Can contain PREVIOUS_VERSION named capture group if the commitMessageTemplate contains the PREVIOUS_VERSION template variable.'
   conanFileReplacement:
       required: true
       description: 'The text that will be inserted instead of the replaceable regex.'
