@@ -39,6 +39,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const js_base64_1 = __nccwpck_require__(4139);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const context = github.context;
     const requiredInputNames = [
         "token",
@@ -53,7 +54,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     const inputs = {
         token: core.getInput("token"),
         conanFilePath: core.getInput("conanFilePath"),
-        commitMessage: core.getInput("commitMessage"),
+        commitMessageTemplate: core.getInput("commitMessageTemplate"),
         sourceBranchName: core.getInput("sourceBranchName"),
         destinationBranchName: core.getInput("destinationBranchName"),
         conanFileReplaceableRegex: core.getInput("conanFileReplaceableRegex"),
@@ -71,19 +72,31 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     const octokit = github.getOctokit(inputs.token);
     const { data: repositories } = yield octokit.rest.repos.listForOrg({ org: context.repo.owner });
     for (const repository of repositories) {
-        const getContentResponse = yield octokit.rest.repos.getContent({
-            owner: context.repo.owner,
-            repo: repository.name,
-            path: inputs.commitMessage,
-            ref: inputs.sourceBranchName
-        });
-        if (Array.isArray(getContentResponse.data)) {
-            throw new Error("conanFilePath must lead to the conanfile.txt that contains conan dependencies.");
+        let content;
+        try {
+            const getContentResponse = yield octokit.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: repository.name,
+                path: inputs.conanFilePath,
+                ref: inputs.sourceBranchName
+            });
+            if (Array.isArray(getContentResponse.data)) {
+                throw new Error("conanFilePath must lead to the conanfile.txt that contains conan dependencies.");
+            }
+            if (!("content" in getContentResponse.data)) {
+                throw new Error(`Unable to get content of ${inputs.conanFilePath}.`);
+            }
+            content = getContentResponse.data.content;
         }
-        if (!("content" in getContentResponse.data)) {
-            throw new Error(`Unable to get content of ${inputs.conanFilePath}.`);
+        catch (error) {
+            continue;
         }
-        const newContent = js_base64_1.Base64.decode(getContentResponse.data.content).replace(new RegExp(inputs.conanFileReplaceableRegex), inputs.conanFileReplacement);
+        const regex = new RegExp(inputs.conanFileReplaceableRegex);
+        const match = regex.exec(content);
+        if (!match) {
+            continue;
+        }
+        const newContent = js_base64_1.Base64.decode(content).replace(content, inputs.conanFileReplacement);
         if (inputs.sourceBranchName != inputs.destinationBranchName) {
             const { data: { commit: { sha: sourceBranchSha } } } = yield octokit.rest.repos.getBranch({
                 owner: context.repo.owner,
@@ -97,11 +110,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 sha: sourceBranchSha
             });
         }
+        let commitMessage = inputs.commitMessageTemplate;
+        if ((_a = match === null || match === void 0 ? void 0 : match.groups) === null || _a === void 0 ? void 0 : _a.PREVIOUS_VERSION) {
+            commitMessage = inputs.commitMessageTemplate.replace("{PREVIOUS_VERSION}", match.groups.PREVIOUS_VERSION);
+        }
         yield octokit.rest.repos.createOrUpdateFileContents({
             owner: context.repo.owner,
             repo: repository.name,
             path: inputs.conanFilePath,
-            message: inputs.commitMessage,
+            message: commitMessage,
             content: js_base64_1.Base64.encode(newContent),
             branch: inputs.destinationBranchName
         });
