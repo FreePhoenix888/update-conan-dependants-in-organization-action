@@ -37,7 +37,7 @@ inputs:
       required: false
       description: 'The title of the pull request that will be opened.'
   pullRequestBody:
-    required: true
+    required: false
     description: 'The body of the pull request that will be opened.'
 
 runs:
